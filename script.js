@@ -5,7 +5,7 @@ window.addEventListener('load', () => {
 });
 
 function updateDisplay(value) {
-    if (/[a-z]/.test(value)) value += "("
+    if (/[sin|cos|tan|ln|log|^|√]/.test(value)) value += "("
     input.value += value;
 
     input.focus();
@@ -17,6 +17,9 @@ function convertTrigFunctions(expression) {
         'sin\\([^()]*(?:\$[^()]*\$[^()]*)*\\)': Math.sin,
         'cos\\([^()]*(?:\$[^()]*\$[^()]*)*\\)': Math.cos,
         'tan\\([^()]*(?:\$[^()]*\$[^()]*)*\\)': Math.tan,
+        'log\\([^()]*(?:\$[^()]*\$[^()]*)*\\)': Math.log,
+        '\^\\([^()]*(?:\$[^()]*\$[^()]*)*\\)': Math.cos,
+        '√\\([^()]*(?:\$[^()]*\$[^()]*)*\\)': Math.tan,
     };
 
     function toRadians(angle) {
@@ -59,6 +62,7 @@ function displayAnswer() {
 
 function calculateBODMAS(expression) {
 
+
     if (!expression.includes('(')) {
         return evaluateSimpleExpression(expression);
     }
@@ -94,11 +98,11 @@ function calculateBODMAS(expression) {
 function evaluateSimpleExpression(expr) {
     const tokens = [];
     let currentNumber = '';
-    
+
     for (let i = 0; i < expr.length; i++) {
         const char = expr[i];
-        
-        if (char === '-' && (i === 0 || /[+\-*/]/.test(expr[i-1]))) {
+
+        if (char === '-' && (i === 0 || /[+\-*/]/.test(expr[i - 1]))) {
             currentNumber = '-';
         }
         else if (/[+\-*/]/.test(char)) {
@@ -120,18 +124,18 @@ function evaluateSimpleExpression(expr) {
     let i = 0;
     while (i < tokens.length) {
         if (tokens[i] === '*' || tokens[i] === '/') {
-            const left = parseFloat(tokens[i-1]);
-            const right = parseFloat(tokens[i+1]);
+            const left = parseFloat(tokens[i - 1]);
+            const right = parseFloat(tokens[i + 1]);
             let result;
-            
+
             if (tokens[i] === '*') {
                 result = left * right;
             } else {
                 if (right === 0) throw new Error("Division by zero");
                 result = left / right;
             }
-            
-            tokens.splice(i-1, 3, result.toString());
+
+            tokens.splice(i - 1, 3, result.toString());
             i--;
         }
         i++;
@@ -141,7 +145,7 @@ function evaluateSimpleExpression(expr) {
     for (let i = 1; i < tokens.length; i += 2) {
         const operator = tokens[i];
         const value = parseFloat(tokens[i + 1]);
-        
+
         if (operator === '+') result += value;
         if (operator === '-') result -= value;
     }

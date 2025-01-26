@@ -16,7 +16,7 @@
             <button class="operator" data-value="cos" onclick="updateDisplay('cos')">cos</button>
             <button class="operator" data-value="tan" onclick="updateDisplay('tan')">tan</button>
             <button class="operator" data-value="log"onclick="updateDisplay('log')">log</button>
-            <button class="operator" data-value="ln" onclick="updateDisplay('ln')">ln</button>
+            <button class="clear" data-value="del" onclick="backspace()">del</button>
             <button class="operator" data-value="√" onclick="updateDisplay('√')">√</button>
             <button class="operator" data-value="^" onclick="updateDisplay('^')">^</button>
             <button class="operator" data-value="(" onclick="updateDisplay(`\(`)">(</button>
@@ -38,7 +38,6 @@
             <button class="operator" data-value="-" onclick="updateDisplay('-')">-</button>
             <button class="number" data-value="." onclick="updateDisplay('.')">.</button>
             <button class="equals" data-value="=" onclick="displayAnswer()">=</button>
-            <button class="operator" data-value="del" onclick="backspace()">del</button>
         </div>
     </div>
     <script src="script.js"></script>
