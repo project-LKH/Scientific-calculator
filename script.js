@@ -12,14 +12,13 @@ function updateDisplay(value) {
     input.setSelectionRange(input.value.length, input.value.length);
 }
 
-function convertTrigFunctions(expression) {
+function convertFunctions(expression) {
     const patterns = {
         'sin\\([^()]*(?:\$[^()]*\$[^()]*)*\\)': Math.sin,
         'cos\\([^()]*(?:\$[^()]*\$[^()]*)*\\)': Math.cos,
         'tan\\([^()]*(?:\$[^()]*\$[^()]*)*\\)': Math.tan,
         'log\\([^()]*(?:\$[^()]*\$[^()]*)*\\)': Math.log,
-        '\^\\([^()]*(?:\$[^()]*\$[^()]*)*\\)': Math.cos,
-        '√\\([^()]*(?:\$[^()]*\$[^()]*)*\\)': Math.tan,
+        '√\\([^()]*(?:\$[^()]*\$[^()]*)*\\)': Math.sqrt,
     };
 
     function toRadians(angle) {
@@ -31,7 +30,9 @@ function convertTrigFunctions(expression) {
     for (const [pattern, trigFunc] of Object.entries(patterns)) {
         result = result.replace(new RegExp(pattern, 'g'), (matchingTrig) => {
             const value = matchingTrig.match(/(?<=\().*?(?=\))/)[0];
-            return trigFunc(toRadians(calculateBODMAS(value)));
+            console.log(matchingTrig,trigFunc,value)
+            if (matchingTrig.includes("sin") || matchingTrig.includes("cos") || matchingTrig.includes("tan")) return trigFunc(toRadians(calculateBODMAS(value)));
+            if (matchingTrig.includes("log")||matchingTrig.includes("√")) return trigFunc(calculateBODMAS(value))
         });
     }
 
@@ -49,7 +50,7 @@ function clearDisplay() {
 }
 
 function calculateAnswer(equation) {
-    equation = convertTrigFunctions(equation)
+    equation = convertFunctions(equation)
     console.log(equation)
     return calculateBODMAS(equation)
 }
@@ -152,5 +153,3 @@ function evaluateSimpleExpression(expr) {
 
     return result;
 }
-
-
