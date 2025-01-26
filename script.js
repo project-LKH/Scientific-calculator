@@ -14,46 +14,21 @@ function updateDisplay(value) {
 
 function convertTrigFunctions(expression) {
     const patterns = {
-        'sin\\(.*?\\)': Math.sin,
-        'cos\\(.*?\\)': Math.cos,
-        'tan\\(.*?\\)': Math.tan,
+        'sin\\([^()]*(?:\$[^()]*\$[^()]*)*\\)': Math.sin,
+        'cos\\([^()]*(?:\$[^()]*\$[^()]*)*\\)': Math.cos,
+        'tan\\([^()]*(?:\$[^()]*\$[^()]*)*\\)': Math.tan,
     };
 
     function toRadians(angle) {
         return angle * (Math.PI / 180);
     }
 
-    function parseExpression(expr) {
-
-        const tokens = expr.split(/([+\-*/])/);
-
-        // Calculate basic arithmetic
-        let result = parseFloat(tokens[0]);
-
-        for (let i = 1; i < tokens.length; i += 2) {
-            const operator = tokens[i];
-            const value = parseFloat(tokens[i + 1]);
-
-            switch (operator) {
-                case '+': result += value; break;
-                case '-': result -= value; break;
-                case '*': result *= value; break;
-                case '/': result /= value; break;
-                default: break;
-            }
-        }
-        return result;
-    }
-
     let result = expression;
 
-    for (const [pattern, func] of Object.entries(patterns)) {
-        result = result.replace(new RegExp(pattern, 'g'), (match, p1) => {
-            const value = match.match(/(?<=\().*?(?=\))/)[0];
-            console.log({ match, p1, value })
-
-            const arg = parseExpression(value);
-            return func(toRadians(arg));
+    for (const [pattern, trigFunc] of Object.entries(patterns)) {
+        result = result.replace(new RegExp(pattern, 'g'), (matchingTrig) => {
+            const value = matchingTrig.match(/(?<=\().*?(?=\))/)[0];
+            return trigFunc(toRadians(calculateBODMAS(value)));
         });
     }
 
@@ -63,18 +38,115 @@ function convertTrigFunctions(expression) {
 function backspace() {
     let updatedValue = input.value.split("")
     updatedValue.pop()
-    input.value = updatedValue.join("")
+    input.value = updatedValue.join("");
 }
+
 function clearDisplay() {
     input.value = '';
-    input.focus();
 }
+
 function calculateAnswer(equation) {
     equation = convertTrigFunctions(equation)
-    return eval(equation)
+    console.log(equation)
+    return calculateBODMAS(equation)
 }
+
 function displayAnswer() {
     const equation = input.value
     clearDisplay()
     updateDisplay(calculateAnswer(equation))
 }
+
+function calculateBODMAS(expression) {
+
+    if (!expression.includes('(')) {
+        return evaluateSimpleExpression(expression);
+    }
+
+    let openingBracket = -1;
+    let closingBracket = -1;
+    let depth = 0;
+
+    for (let i = 0; i < expression.length; i++) {
+        if (expression[i] === '(') {
+            depth++;
+            if (openingBracket === -1) openingBracket = i;
+        }
+        else if (expression[i] === ')') {
+            depth--;
+            if (depth === 0) {
+                closingBracket = i;
+                break;
+            }
+        }
+    }
+
+    const beforeBracket = expression.substring(0, openingBracket);
+    const insideBracket = expression.substring(openingBracket + 1, closingBracket);
+    const afterBracket = expression.substring(closingBracket + 1);
+
+    const evaluatedInside = calculateBODMAS(insideBracket);
+
+    const newExpression = beforeBracket + evaluatedInside + afterBracket;
+    return calculateBODMAS(newExpression);
+}
+
+function evaluateSimpleExpression(expr) {
+    const tokens = [];
+    let currentNumber = '';
+    
+    for (let i = 0; i < expr.length; i++) {
+        const char = expr[i];
+        
+        if (char === '-' && (i === 0 || /[+\-*/]/.test(expr[i-1]))) {
+            currentNumber = '-';
+        }
+        else if (/[+\-*/]/.test(char)) {
+            if (currentNumber) {
+                tokens.push(currentNumber);
+                currentNumber = '';
+            }
+            tokens.push(char);
+        }
+        else if (/[\d.]/.test(char)) {
+            currentNumber += char;
+        }
+    }
+
+    if (currentNumber) {
+        tokens.push(currentNumber);
+    }
+
+    let i = 0;
+    while (i < tokens.length) {
+        if (tokens[i] === '*' || tokens[i] === '/') {
+            const left = parseFloat(tokens[i-1]);
+            const right = parseFloat(tokens[i+1]);
+            let result;
+            
+            if (tokens[i] === '*') {
+                result = left * right;
+            } else {
+                if (right === 0) throw new Error("Division by zero");
+                result = left / right;
+            }
+            
+            tokens.splice(i-1, 3, result.toString());
+            i--;
+        }
+        i++;
+    }
+
+    let result = parseFloat(tokens[0]);
+    for (let i = 1; i < tokens.length; i += 2) {
+        const operator = tokens[i];
+        const value = parseFloat(tokens[i + 1]);
+        
+        if (operator === '+') result += value;
+        if (operator === '-') result -= value;
+    }
+
+    return result;
+}
+
+
