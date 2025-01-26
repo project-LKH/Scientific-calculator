@@ -5,7 +5,7 @@ window.addEventListener('load', () => {
 });
 
 function updateDisplay(value) {
-    if (/[sin|cos|tan|ln|log|^|√]/.test(value)) value += "("
+    if (/(sin|cos|tan|ln|log|\^|√)/.test(value)) value += "("
     input.value += value;
 
     input.focus();
@@ -30,9 +30,9 @@ function convertFunctions(expression) {
     for (const [pattern, trigFunc] of Object.entries(patterns)) {
         result = result.replace(new RegExp(pattern, 'g'), (matchingTrig) => {
             const value = matchingTrig.match(/(?<=\().*?(?=\))/)[0];
-            console.log(matchingTrig,trigFunc,value)
+            console.log(matchingTrig, trigFunc, value)
             if (matchingTrig.includes("sin") || matchingTrig.includes("cos") || matchingTrig.includes("tan")) return trigFunc(toRadians(calculateBODMAS(value)));
-            if (matchingTrig.includes("log")||matchingTrig.includes("√")) return trigFunc(calculateBODMAS(value))
+            if (matchingTrig.includes("log") || matchingTrig.includes("√")) return trigFunc(calculateBODMAS(value))
         });
     }
 
@@ -58,12 +58,14 @@ function calculateAnswer(equation) {
 function displayAnswer() {
     const equation = input.value
     clearDisplay()
-    updateDisplay(calculateAnswer(equation))
+    try {
+        updateDisplay(calculateAnswer(equation))
+    } catch (err) {
+        updateDisplay(`Err: ${err.message}`)
+    }
 }
 
 function calculateBODMAS(expression) {
-
-
     if (!expression.includes('(')) {
         return evaluateSimpleExpression(expression);
     }
@@ -89,6 +91,32 @@ function calculateBODMAS(expression) {
     const beforeBracket = expression.substring(0, openingBracket);
     const insideBracket = expression.substring(openingBracket + 1, closingBracket);
     const afterBracket = expression.substring(closingBracket + 1);
+
+    const isExponent = beforeBracket.endsWith('^');
+
+    if (isExponent) {
+        // Extract just the base number
+        let baseStr = '';
+        let i = beforeBracket.length - 2; // Start before the ^
+        
+        // Go backwards until we find an operator or start of string
+        while (i >= 0 && !/[+\-*/]/.test(beforeBracket[i])) {
+            baseStr = beforeBracket[i] + baseStr;
+            i--;
+        }
+
+        // Get the expression before the base
+        const beforeBase = beforeBracket.substring(0, i + 1);
+        
+        // Calculate base and exponent
+        const base = parseFloat(baseStr);
+        const exponent = calculateBODMAS(insideBracket);
+        
+        // Calculate result and combine with remaining expressions
+        const result = Math.pow(base, exponent);
+        const newExpression = beforeBase + result + afterBracket;
+        return calculateBODMAS(newExpression);
+    }
 
     const evaluatedInside = calculateBODMAS(insideBracket);
 
