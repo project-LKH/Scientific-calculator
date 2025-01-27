@@ -245,7 +245,7 @@ function evaluateSimpleExpression(expr) {
         tokens.push(currentNumber);
     }
 
-    // Process multiplication and division first
+
     let i = 0;
     while (i < tokens.length) {
         if (tokens[i] === '*' || tokens[i] === '/') {
@@ -266,7 +266,6 @@ function evaluateSimpleExpression(expr) {
         i++;
     }
 
-    // Process addition and subtraction
     let result = tokens[0];
     for (let i = 1; i < tokens.length; i += 2) {
         const operator = tokens[i];
