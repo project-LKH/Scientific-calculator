@@ -82,8 +82,9 @@ function convertFunctions(expression) {
 // }
 
 function backspace() {
-    input.value = input.value.slice(0, input.value.length)
-}
+    const updatedValue = input.value.split("")
+    updatedValue.pop()
+    input.value = updatedValue
 
 function clearDisplay() {
     input.value = '';
