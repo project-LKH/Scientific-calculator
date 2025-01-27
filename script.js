@@ -85,7 +85,7 @@ function backspace() {
     const updatedValue = input.value.split("")
     updatedValue.pop()
     input.value = updatedValue
-
+}
 function clearDisplay() {
     input.value = '';
 }
