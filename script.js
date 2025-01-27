@@ -2,6 +2,12 @@ const input = document.getElementById("display")
 
 window.addEventListener('load', () => {
     input.focus();
+    document.querySelectorAll(".number").forEach((button) => {
+        button.addEventListener("click", () => updateDisplay(button.getAttribute("data-value")))
+    })
+    document.querySelectorAll(".operator").forEach((button) => {
+        button.addEventListener("click", () => updateDisplay(button.getAttribute("data-value")))
+    })
 });
 
 function updateDisplay(value) {
@@ -25,24 +31,58 @@ function convertFunctions(expression) {
         return angle * (Math.PI / 180);
     }
 
-    let result = expression;
-
     for (const [pattern, trigFunc] of Object.entries(patterns)) {
-        result = result.replace(new RegExp(pattern, 'g'), (matchingTrig) => {
+        expression = expression.replace(new RegExp(pattern, 'g'), (matchingTrig) => {
             const value = matchingTrig.match(/(?<=\().*?(?=\))/)[0];
-            console.log(matchingTrig, trigFunc, value)
             if (matchingTrig.includes("sin") || matchingTrig.includes("cos") || matchingTrig.includes("tan")) return trigFunc(toRadians(calculateBODMAS(value)));
             if (matchingTrig.includes("log") || matchingTrig.includes("√")) return trigFunc(calculateBODMAS(value))
         });
     }
 
-    return result;
+    return expression;
 }
+// function convertFunctions(expression) {
+//     const patterns = {
+//         'sin\$([^()]*(?:\\([^()]*\$[^()]*)*)\\)': Math.sin,
+//         'cos\$([^()]*(?:\\([^()]*\$[^()]*)*)\\)': Math.cos,
+//         'tan\$([^()]*(?:\\([^()]*\$[^()]*)*)\\)': Math.tan,
+//         'log\$([^()]*(?:\\([^()]*\$[^()]*)*)\\)': Math.log,
+//         '\\√\$([^()]*(?:\\([^()]*\$[^()]*)*)\\)': Math.sqrt,
+//     };
+
+//     let result = expression;
+//     let previousResult;
+
+//     do {
+//         previousResult = result;
+//         for (const [pattern, trigFunc] of Object.entries(patterns)) {
+//             const regex = new RegExp(pattern);
+//             const match = regex.exec(result);
+//             console.log({ regex, result, match })
+//             if (match) {
+//                 const innerExpression = match[1];
+//                 const evaluatedInner = convertFunctions(innerExpression);
+
+//                 const evaluated = calculateBODMAS(evaluatedInner.toString());
+//                 const inRadians = (trigFunc === Math.sin || trigFunc === Math.cos || trigFunc === Math.tan)
+//                     ? toRadians(evaluated)
+//                     : evaluated;
+//                 const calculated = trigFunc(inRadians);
+
+//                 result = result.replace(match[0], calculated);
+//             }
+//         }
+//     } while (result !== previousResult);
+
+
+//     if (!isNaN(result)) {
+//         return result;
+//     }
+//     return calculateBODMAS(result);
+// }
 
 function backspace() {
-    let updatedValue = input.value.split("")
-    updatedValue.pop()
-    input.value = updatedValue.join("");
+    input.value = input.value.slice(0, input.value.length)
 }
 
 function clearDisplay() {
@@ -51,7 +91,6 @@ function clearDisplay() {
 
 function calculateAnswer(equation) {
     equation = convertFunctions(equation)
-    console.log(equation)
     return calculateBODMAS(equation)
 }
 
@@ -59,9 +98,19 @@ function displayAnswer() {
     const equation = input.value
     clearDisplay()
     try {
+        if (/[\+]{2,}|[\-]{3,}|[\/]{2,}|[\*]{2,}|[\^]{2,}/.test(equation)) {
+            throw new Error("Invalid operator repetition detected. Operators cannot be repeated (except -- for negative numbers).");
+        }
         updateDisplay(calculateAnswer(equation))
     } catch (err) {
-        updateDisplay(`Err: ${err.message}`)
+        if (err.message.includes("call stack" || "cannot")) {
+            clearDisplay()
+            window.alert("Invalid input")
+        }
+        else {
+            clearDisplay()
+            window.alert(err.message)
+        }
     }
 }
 
@@ -95,24 +144,19 @@ function calculateBODMAS(expression) {
     const isExponent = beforeBracket.endsWith('^');
 
     if (isExponent) {
-        // Extract just the base number
         let baseStr = '';
-        let i = beforeBracket.length - 2; // Start before the ^
-        
-        // Go backwards until we find an operator or start of string
+        let i = beforeBracket.length - 2;
+
         while (i >= 0 && !/[+\-*/]/.test(beforeBracket[i])) {
             baseStr = beforeBracket[i] + baseStr;
             i--;
         }
 
-        // Get the expression before the base
         const beforeBase = beforeBracket.substring(0, i + 1);
-        
-        // Calculate base and exponent
         const base = parseFloat(baseStr);
         const exponent = calculateBODMAS(insideBracket);
-        
-        // Calculate result and combine with remaining expressions
+
+
         const result = Math.pow(base, exponent);
         const newExpression = beforeBase + result + afterBracket;
         return calculateBODMAS(newExpression);
@@ -125,12 +169,64 @@ function calculateBODMAS(expression) {
 }
 
 function evaluateSimpleExpression(expr) {
+    function calculateWithDecimals(a, b, operation) {
+        const [aInt = '0', aDec = ''] = a.toString().split('.');
+        const [bInt = '0', bDec = ''] = b.toString().split('.');
+        
+        if (operation === '*') {
+            const aFactor = BigInt('1' + '0'.repeat(aDec.length));
+            const bFactor = BigInt('1' + '0'.repeat(bDec.length));
+            
+            const aNumber = BigInt(aInt + aDec) || 0n;
+            const bNumber = BigInt(bInt + bDec) || 0n;
+            
+            const result = (aNumber * bNumber).toString();
+            
+            const factorResult = (aFactor * bFactor).toString();
+
+            const leadingZeros = factorResult.length - result.length;
+            const paddedResult = '0'.repeat(Math.max(0, leadingZeros)) + result;
+            
+            return insertDecimalPoint(paddedResult, factorResult.toString().length - 1);
+        }
+        
+        const decimalPlaces = Math.max(aDec.length, bDec.length);
+        const aPaddedDec = aDec.padEnd(decimalPlaces, '0');
+        const bPaddedDec = bDec.padEnd(decimalPlaces, '0');
+        
+        const aNumber = BigInt(aInt + aPaddedDec);
+        const bNumber = BigInt(bInt + bPaddedDec);
+        
+        let result;
+        if (operation === '+') {
+            result = aNumber + bNumber;
+        } else if (operation === '-') {
+            result = aNumber - bNumber;
+        }
+        
+        return insertDecimalPoint(result.toString(), decimalPlaces);
+    }
+
+    function insertDecimalPoint(numStr, decimalPlaces) {
+        if (decimalPlaces === 0) return numStr;
+        
+        while (numStr.length <= decimalPlaces) {
+            numStr = '0' + numStr;
+        }
+        
+        const insertAt = numStr.length - decimalPlaces;
+        let result = numStr.slice(0, insertAt) + '.' + numStr.slice(insertAt);
+        result = result.replace(/\.?0+$/, '');
+        
+        return result;
+    }
+
+
     const tokens = [];
     let currentNumber = '';
 
     for (let i = 0; i < expr.length; i++) {
         const char = expr[i];
-
         if (char === '-' && (i === 0 || /[+\-*/]/.test(expr[i - 1]))) {
             currentNumber = '-';
         }
@@ -145,38 +241,38 @@ function evaluateSimpleExpression(expr) {
             currentNumber += char;
         }
     }
-
     if (currentNumber) {
         tokens.push(currentNumber);
     }
 
+    // Process multiplication and division first
     let i = 0;
     while (i < tokens.length) {
         if (tokens[i] === '*' || tokens[i] === '/') {
-            const left = parseFloat(tokens[i - 1]);
-            const right = parseFloat(tokens[i + 1]);
+            const left = tokens[i - 1];
+            const right = tokens[i + 1];
             let result;
 
             if (tokens[i] === '*') {
-                result = left * right;
+                result = calculateWithDecimals(left, right, '*');
             } else {
-                if (right === 0) throw new Error("Division by zero");
-                result = left / right;
+                if (right === '0') throw new Error("Division by zero");
+                result = (Number(left) / Number(right)).toString();
             }
 
-            tokens.splice(i - 1, 3, result.toString());
+            tokens.splice(i - 1, 3, result);
             i--;
         }
         i++;
     }
 
-    let result = parseFloat(tokens[0]);
+    // Process addition and subtraction
+    let result = tokens[0];
     for (let i = 1; i < tokens.length; i += 2) {
         const operator = tokens[i];
-        const value = parseFloat(tokens[i + 1]);
-
-        if (operator === '+') result += value;
-        if (operator === '-') result -= value;
+        const value = tokens[i + 1];
+        
+        result = calculateWithDecimals(result, value, operator);
     }
 
     return result;
