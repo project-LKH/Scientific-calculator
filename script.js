@@ -84,7 +84,7 @@ function convertFunctions(expression) {
 function backspace() {
     const updatedValue = input.value.split("")
     updatedValue.pop()
-    input.value = updatedValue
+    input.value = updatedValue.join("")
 }
 function clearDisplay() {
     input.value = '';
