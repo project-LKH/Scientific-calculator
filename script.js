@@ -71,6 +71,7 @@ window.addEventListener('load', () => {
 
 function backspace() {
     input.value = input.value.length ? input.value.slice(0, -1) : '';
+    updateBracketValidation();
 }
 
 function checkBrackets(expression) {
@@ -78,7 +79,6 @@ function checkBrackets(expression) {
     let message = "";
     let isValid = true;
     
-    // Track position of each opening bracket
     const positions = [];
     
     for (let i = 0; i < expression.length; i++) {
@@ -113,7 +113,6 @@ function updateDisplay(value) {
     if (/(sin|cos|tan|ln|log|\^|√)/.test(value)) value += "(";
     input.value += value;
 
-    // Check brackets after each input
     updateBracketValidation();
 
     input.focus();
