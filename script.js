@@ -210,10 +210,13 @@ function displayAnswer() {
         }
     }
 }
-
+function roundResult(number) {
+    return Number(parseFloat(number).toFixed(10));
+}
 function calculateBODMAS(expression) {
     if (!expression.includes('(')) {
-        return evaluateSimpleExpression(expression);
+        console.log
+        return roundResult(evaluateSimpleExpression(expression));
     }
 
     let openingBracket = -1;
