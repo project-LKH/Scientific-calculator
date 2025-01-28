@@ -20,73 +20,56 @@ function updateDisplay(value) {
 
 function convertFunctions(expression) {
     const patterns = {
-        'sin\\([^()]*(?:\$[^()]*\$[^()]*)*\\)': Math.sin,
-        'cos\\([^()]*(?:\$[^()]*\$[^()]*)*\\)': Math.cos,
-        'tan\\([^()]*(?:\$[^()]*\$[^()]*)*\\)': Math.tan,
-        'log\\([^()]*(?:\$[^()]*\$[^()]*)*\\)': Math.log,
-        '√\\([^()]*(?:\$[^()]*\$[^()]*)*\\)': Math.sqrt,
+        'sin\\([^()]*\\)': Math.sin,
+        'cos\\([^()]*\\)': Math.cos,
+        'tan\\([^()]*\\)': Math.tan,
+        'log\\([^()]*\\)': Math.log,
+        '√\\([^()]*\\)': Math.sqrt,
     };
 
     function toRadians(angle) {
         return angle * (Math.PI / 180);
     }
-
-    for (const [pattern, trigFunc] of Object.entries(patterns)) {
-        expression = expression.replace(new RegExp(pattern, 'g'), (matchingTrig) => {
-            const value = matchingTrig.match(/(?<=\().*?(?=\))/)[0];
-            if (matchingTrig.includes("sin") || matchingTrig.includes("cos") || matchingTrig.includes("tan")) return trigFunc(toRadians(calculateBODMAS(value)));
-            if (matchingTrig.includes("log") || matchingTrig.includes("√")) return trigFunc(calculateBODMAS(value))
-        });
+    function getValue(str) {
+        return str.substring(
+            str.indexOf('(') + 1,
+            str.lastIndexOf(')')
+        );
     }
 
-    return expression;
+    function processNestedFunctions(expr) {
+        console.log(expr)
+        let prevExpr;
+        do {
+            prevExpr = expr;
+            for (const [pattern, trigFunc] of Object.entries(patterns)) {
+                expr = expr.replace(new RegExp(pattern, 'g'), (matchingTrig) => {
+                    const value = getValue(matchingTrig)
+                    const processedValue = processNestedFunctions(value);
+                    console.log({ matchingTrig, value, processedValue })
+
+                    if (matchingTrig.includes("sin") || matchingTrig.includes("cos") || matchingTrig.includes("tan")) {
+                        return Number(trigFunc(toRadians(Number(processedValue))));
+                    }
+                    return Number(trigFunc(Number(processedValue)));
+                });
+            }
+        } while (prevExpr !== expr);
+
+        return calculateBODMAS(expr);
+    }
+
+    return processNestedFunctions(expression);
 }
-// function convertFunctions(expression) {
-//     const patterns = {
-//         'sin\$([^()]*(?:\\([^()]*\$[^()]*)*)\\)': Math.sin,
-//         'cos\$([^()]*(?:\\([^()]*\$[^()]*)*)\\)': Math.cos,
-//         'tan\$([^()]*(?:\\([^()]*\$[^()]*)*)\\)': Math.tan,
-//         'log\$([^()]*(?:\\([^()]*\$[^()]*)*)\\)': Math.log,
-//         '\\√\$([^()]*(?:\\([^()]*\$[^()]*)*)\\)': Math.sqrt,
-//     };
 
-//     let result = expression;
-//     let previousResult;
-
-//     do {
-//         previousResult = result;
-//         for (const [pattern, trigFunc] of Object.entries(patterns)) {
-//             const regex = new RegExp(pattern);
-//             const match = regex.exec(result);
-//             console.log({ regex, result, match })
-//             if (match) {
-//                 const innerExpression = match[1];
-//                 const evaluatedInner = convertFunctions(innerExpression);
-
-//                 const evaluated = calculateBODMAS(evaluatedInner.toString());
-//                 const inRadians = (trigFunc === Math.sin || trigFunc === Math.cos || trigFunc === Math.tan)
-//                     ? toRadians(evaluated)
-//                     : evaluated;
-//                 const calculated = trigFunc(inRadians);
-
-//                 result = result.replace(match[0], calculated);
-//             }
-//         }
-//     } while (result !== previousResult);
-
-
-//     if (!isNaN(result)) {
-//         return result;
-//     }
-//     return calculateBODMAS(result);
-// }
 
 function backspace() {
     const updatedValue = input.value.split("")
     updatedValue.pop()
     input.value = updatedValue.join("")
 }
-function clearDisplay() {
+func
+tion clearDisplay() {
     input.value = '';
 }
 
@@ -173,52 +156,52 @@ function evaluateSimpleExpression(expr) {
     function calculateWithDecimals(a, b, operation) {
         const [aInt = '0', aDec = ''] = a.toString().split('.');
         const [bInt = '0', bDec = ''] = b.toString().split('.');
-        
+
         if (operation === '*') {
             const aFactor = BigInt('1' + '0'.repeat(aDec.length));
             const bFactor = BigInt('1' + '0'.repeat(bDec.length));
-            
+
             const aNumber = BigInt(aInt + aDec) || 0n;
             const bNumber = BigInt(bInt + bDec) || 0n;
-            
+
             const result = (aNumber * bNumber).toString();
-            
+
             const factorResult = (aFactor * bFactor).toString();
 
             const leadingZeros = factorResult.length - result.length;
             const paddedResult = '0'.repeat(Math.max(0, leadingZeros)) + result;
-            
+
             return insertDecimalPoint(paddedResult, factorResult.toString().length - 1);
         }
-        
+
         const decimalPlaces = Math.max(aDec.length, bDec.length);
         const aPaddedDec = aDec.padEnd(decimalPlaces, '0');
         const bPaddedDec = bDec.padEnd(decimalPlaces, '0');
-        
+
         const aNumber = BigInt(aInt + aPaddedDec);
         const bNumber = BigInt(bInt + bPaddedDec);
-        
+
         let result;
         if (operation === '+') {
             result = aNumber + bNumber;
         } else if (operation === '-') {
             result = aNumber - bNumber;
         }
-        
+
         return insertDecimalPoint(result.toString(), decimalPlaces);
     }
 
     function insertDecimalPoint(numStr, decimalPlaces) {
         if (decimalPlaces === 0) return numStr;
-        
+
         while (numStr.length <= decimalPlaces) {
             numStr = '0' + numStr;
         }
-        
+
         const insertAt = numStr.length - decimalPlaces;
         let result = numStr.slice(0, insertAt) + '.' + numStr.slice(insertAt);
         result = result.replace(/\.?0+$/, '');
-        
+
         return result;
     }
 
@@ -271,7 +254,7 @@ function evaluateSimpleExpression(expr) {
     for (let i = 1; i < tokens.length; i += 2) {
         const operator = tokens[i];
         const value = tokens[i + 1];
-        
+
         result = calculateWithDecimals(result, value, operator);
     }
 
