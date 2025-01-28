@@ -1,14 +1,85 @@
 const input = document.getElementById("display")
 
+// Add these functions
+function createRootModal() {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.id = 'rootModal';
+
+    modal.innerHTML = `
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <h2>Enter Root Values</h2>
+            <div class="modal-inputs">
+                <div class="input-group">
+                    <label>Root (n):</label>
+                    <input type="number" id="rootValue" min="1">
+                </div>
+            </div>
+            <div class="modal-buttons">
+                <button class="operator" onclick="calculateRoot()">Update</button>
+                <button class="clear" onclick="closeModal()">Cancel</button>
+            </div>
+        </div>
+    `;
+
+    document.querySelector('.modal-container').appendChild(modal);
+
+    const overlay = modal.querySelector('.modal-overlay');
+    overlay.addEventListener('click', closeModal);
+
+    // Focus on first input
+    document.getElementById('rootValue').focus();
+}
+
+function closeModal() {
+    const modal = document.getElementById('rootModal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+function calculateRoot() {
+    const rootValue = document.getElementById('rootValue').value;
+
+    if (!rootValue ) {
+        alert('Please enter a value for the root');
+        return;
+    }
+
+    input.value += `((${rootValue})√(`;
+
+    closeModal();
+}
+
 window.addEventListener('load', () => {
     input.focus();
-    document.querySelectorAll(".number").forEach((button) => {
-        button.addEventListener("click", () => updateDisplay(button.getAttribute("data-value")))
-    })
-    document.querySelectorAll(".operator").forEach((button) => {
-        button.addEventListener("click", () => updateDisplay(button.getAttribute("data-value")))
-    })
+
+    document.querySelectorAll(".number, .operator").forEach((button) => {
+        button.addEventListener("click", () => {
+            const value = button.getAttribute("data-value");
+
+            if (value === '√') {
+                createRootModal();
+            } else {
+                updateDisplay(value);
+            }
+        });
+    });
 });
+
+
+function backspace() {
+    input.value = input.value.length ? input.value.slice(0, -1) : '';
+}
+
+
+function clearDisplay() {
+    input.value = '';
+}
+
+
+const nthRoot = (num, root) => num ** (1 / root);
 
 function updateDisplay(value) {
     if (/(sin|cos|tan|ln|log|\^|√)/.test(value)) value += "("
@@ -18,18 +89,25 @@ function updateDisplay(value) {
     input.setSelectionRange(input.value.length, input.value.length);
 }
 
+
 function convertFunctions(expression) {
     const patterns = {
         'sin\\([^()]*\\)': Math.sin,
         'cos\\([^()]*\\)': Math.cos,
         'tan\\([^()]*\\)': Math.tan,
         'log\\([^()]*\\)': Math.log,
-        '√\\([^()]*\\)': Math.sqrt,
+        '\\(\\((\\d+)\\)√\\([^()]*\\)\\)': (match) => {
+            console.log(match)
+            const root = match.match(/\d+/)[0];
+            const num = match.match('√\\(([^()]*)\\)\\)')[1]
+            return nthRoot(calculateBODMAS(num), root);
+        },
     };
 
     function toRadians(angle) {
         return angle * (Math.PI / 180);
     }
+
     function getValue(str) {
         return str.substring(
             str.indexOf('(') + 1,
@@ -38,15 +116,17 @@ function convertFunctions(expression) {
     }
 
     function processNestedFunctions(expr) {
-        console.log(expr)
         let prevExpr;
         do {
             prevExpr = expr;
             for (const [pattern, trigFunc] of Object.entries(patterns)) {
                 expr = expr.replace(new RegExp(pattern, 'g'), (matchingTrig) => {
+                    console.log(matchingTrig)
+                    if (matchingTrig.includes('√')) {
+                        return trigFunc(matchingTrig);
+                    }
                     const value = getValue(matchingTrig)
                     const processedValue = processNestedFunctions(value);
-                    console.log({ matchingTrig, value, processedValue })
 
                     if (matchingTrig.includes("sin") || matchingTrig.includes("cos") || matchingTrig.includes("tan")) {
                         return Number(trigFunc(toRadians(Number(processedValue))));
@@ -60,17 +140,6 @@ function convertFunctions(expression) {
     }
 
     return processNestedFunctions(expression);
-}
-
-
-function backspace() {
-    const updatedValue = input.value.split("")
-    updatedValue.pop()
-    input.value = updatedValue.join("")
-}
-func
-tion clearDisplay() {
-    input.value = '';
 }
 
 function calculateAnswer(equation) {
