@@ -33,7 +33,7 @@ function createRootModal() {
             </div>
             <div class="modal-buttons">
                 <button class="operator" onclick="displayRoot()">Update</button>
-                <button class="clear" onclick="closeModal()">Cancel</button>
+                <button class="clear" onclick="closeModal('rootModal')">Cancel</button>
             </div>
         </div>
     `;
@@ -63,7 +63,7 @@ function createLogModal() {
             </div>
             <div class="modal-buttons">
                 <button class="operator" onclick="displayLog()">Update</button>
-                <button class="clear" onclick="closeModal()">Cancel</button>
+                <button class="clear" onclick="closeModal('logModal')">Cancel</button>
             </div>
         </div>
     `;
