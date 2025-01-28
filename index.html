@@ -9,36 +9,39 @@
 </head>
 
 <body>
-    <div class="calculator">
-        <input type="text" id="display" readonly>
-        <div class="buttons">
-            <button class="operator" data-value="sin">sin</button>
-            <button class="operator" data-value="cos">cos</button>
-            <button class="operator" data-value="tan">tan</button>
-            <button class="operator" data-value="log">log</button>
-            <button class="clear" data-value="del" onclick="backspace()">del</button>
-            <button class="operator" data-value="√">√</button>
-            <button class="operator" data-value="^">^</button>
-            <button class="operator" data-value="(">(</button>
-            <button class="operator" data-value=")">)</button>
-            <button class="clear" data-value="C" onclick="clearDisplay()">C</button>
-            <button class="number" data-value="1">1</button>
-            <button class="number" data-value="2">2</button>
-            <button class="number" data-value="3">3</button>
-            <button class="number" data-value="4">4</button>
-            <button class="operator" data-value="/">÷</button>
-            <button class="number" data-value="5">5</button>
-            <button class="number" data-value="6">6</button>
-            <button class="number" data-value="7">7</button>
-            <button class="number" data-value="8">8</button>
-            <button class="operator" data-value="*">×</button>
-            <button class="number" data-value="9">9</button>
-            <button class="number" data-value="0">0</button>
-            <button class="operator" data-value="+">+</button>
-            <button class="operator" data-value="-">-</button>
-            <button class="number" data-value=".">.</button>
-            <button class="equals" data-value="=" onclick="displayAnswer()">=</button>
+    <div class="calculator-container">
+        <div class="calculator">
+            <input type="text" id="display" readonly>
+            <div class="buttons">
+                <button class="operator" data-value="sin">sin</button>
+                <button class="operator" data-value="cos">cos</button>
+                <button class="operator" data-value="tan">tan</button>
+                <button class="operator" data-value="log">log</button>
+                <button class="clear" data-value="del" onclick="backspace()">del</button>
+                <button class="operator" data-value="√">√</button>
+                <button class="operator" data-value="^">^</button>
+                <button class="operator" data-value="(">(</button>
+                <button class="operator" data-value=")">)</button>
+                <button class="clear" data-value="C" onclick="clearDisplay()">C</button>
+                <button class="number" data-value="1">1</button>
+                <button class="number" data-value="2">2</button>
+                <button class="number" data-value="3">3</button>
+                <button class="number" data-value="4">4</button>
+                <button class="operator" data-value="/">÷</button>
+                <button class="number" data-value="5">5</button>
+                <button class="number" data-value="6">6</button>
+                <button class="number" data-value="7">7</button>
+                <button class="number" data-value="8">8</button>
+                <button class="operator" data-value="*">×</button>
+                <button class="number" data-value="9">9</button>
+                <button class="number" data-value="0">0</button>
+                <button class="operator" data-value="+">+</button>
+                <button class="operator" data-value="-">-</button>
+                <button class="number" data-value=".">.</button>
+                <button class="equals" data-value="=" onclick="displayAnswer()">=</button>
+            </div>
         </div>
+        <div id="validation-message" class="validation-message"></div>
     </div>
     <div class="modal-container"></div>
     <script src="script.js"></script>

@@ -73,22 +73,67 @@ function backspace() {
     input.value = input.value.length ? input.value.slice(0, -1) : '';
 }
 
-
-function clearDisplay() {
-    input.value = '';
+function checkBrackets(expression) {
+    const stack = [];
+    let message = "";
+    let isValid = true;
+    
+    // Track position of each opening bracket
+    const positions = [];
+    
+    for (let i = 0; i < expression.length; i++) {
+        if (expression[i] === '(') {
+            stack.push('(');
+            positions.push(i + 1); 
+        }
+        else if (expression[i] === ')') {
+            if (stack.length === 0) {
+                message = `Extra closing bracket found at position ${i + 1}`;
+                isValid = false;
+                break;
+            }
+            stack.pop();
+            positions.pop();
+        }
+    }
+    
+    if (stack.length > 0 && isValid) {
+        message = `Unclosed bracket(s) found at position(s): ${positions.join(', ')}`;
+        isValid = false;
+    }
+    
+    return {
+        isValid,
+        message: isValid ? "" : message
+    };
 }
 
 
-const nthRoot = (num, root) => num ** (1 / root);
-
 function updateDisplay(value) {
-    if (/(sin|cos|tan|ln|log|\^|√)/.test(value)) value += "("
+    if (/(sin|cos|tan|ln|log|\^|√)/.test(value)) value += "(";
     input.value += value;
+
+    // Check brackets after each input
+    updateBracketValidation();
 
     input.focus();
     input.setSelectionRange(input.value.length, input.value.length);
 }
 
+function updateBracketValidation() {
+    const messageDiv = document.getElementById('validation-message');
+    const result = checkBrackets(input.value);
+    
+    messageDiv.textContent = result.message;
+    messageDiv.className = 'validation-message ' + (result.isValid ? 'success' : 'error');
+}
+
+function clearDisplay() {
+    input.value = '';
+    document.getElementById('validation-message').textContent = '';
+}
+
+const nthRoot = (num, root) => num ** (1 / root);
 
 function convertFunctions(expression) {
     const patterns = {
