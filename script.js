@@ -1,6 +1,23 @@
 const input = document.getElementById("display")
 
-// Add these functions
+window.addEventListener('load', () => {
+    input.focus();
+
+    document.querySelectorAll(".number, .operator").forEach((button) => {
+        button.addEventListener("click", () => {
+            const value = button.getAttribute("data-value");
+
+            if (value === '√') {
+                createRootModal();
+            } else if (value === 'log') {
+                createLogModal();
+            } else {
+                updateDisplay(value);
+            }
+        });
+    });
+});
+
 function createRootModal() {
     const modal = document.createElement('div');
     modal.className = 'modal';
@@ -11,13 +28,11 @@ function createRootModal() {
         <div class="modal-content">
             <h2>Enter Root Values</h2>
             <div class="modal-inputs">
-                <div class="input-group">
                     <label>Root (n):</label>
                     <input type="number" id="rootValue" min="1">
-                </div>
             </div>
             <div class="modal-buttons">
-                <button class="operator" onclick="calculateRoot()">Update</button>
+                <button class="operator" onclick="displayRoot()">Update</button>
                 <button class="clear" onclick="closeModal()">Cancel</button>
             </div>
         </div>
@@ -28,46 +43,72 @@ function createRootModal() {
     const overlay = modal.querySelector('.modal-overlay');
     overlay.addEventListener('click', closeModal);
 
-    // Focus on first input
     document.getElementById('rootValue').focus();
 }
 
-function closeModal() {
-    const modal = document.getElementById('rootModal');
+function createLogModal() {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.id = 'logModal';
+
+    modal.innerHTML = `
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <h2>Enter Root Values</h2>
+            <div class="modal-inputs">
+                    <label>base (x):</label>
+                    <input type="number" id="baseValue" min="1">
+                    <label>value (y):</label>
+                    <input type="number" id="value" min="1">
+            </div>
+            <div class="modal-buttons">
+                <button class="operator" onclick="displayLog()">Update</button>
+                <button class="clear" onclick="closeModal()">Cancel</button>
+            </div>
+        </div>
+    `;
+
+    document.querySelector('.modal-container').appendChild(modal);
+
+    const overlay = modal.querySelector('.modal-overlay');
+    overlay.addEventListener('click', closeModal);
+
+    document.getElementById('baseValue').focus();
+}
+
+function closeModal(modalID) {
+    const modal = document.getElementById(modalID) ;
     if (modal) {
         modal.remove();
     }
 }
 
-function calculateRoot() {
+function displayRoot() {
     const rootValue = document.getElementById('rootValue').value;
 
-    if (!rootValue ) {
+    if (!rootValue) {
         alert('Please enter a value for the root');
         return;
     }
 
     input.value += `((${rootValue})√(`;
 
-    closeModal();
+    closeModal("rootModal");
 }
 
-window.addEventListener('load', () => {
-    input.focus();
+function displayLog() {
+    const base = document.getElementById('baseValue').value;
+    const value = document.getElementById('value').value;
 
-    document.querySelectorAll(".number, .operator").forEach((button) => {
-        button.addEventListener("click", () => {
-            const value = button.getAttribute("data-value");
+    if (!base||!value) {
+        alert('Please enter a base and value');
+        return;
+    }
 
-            if (value === '√') {
-                createRootModal();
-            } else {
-                updateDisplay(value);
-            }
-        });
-    });
-});
+    input.value += `log(${base},${value})`;
 
+    closeModal("logModal");
+}
 
 function backspace() {
     input.value = input.value.length ? input.value.slice(0, -1) : '';
@@ -76,15 +117,15 @@ function backspace() {
 
 function checkBrackets(expression) {
     const stack = [];
+    const positions = [];
     let message = "";
     let isValid = true;
-    
-    const positions = [];
-    
+
+
     for (let i = 0; i < expression.length; i++) {
         if (expression[i] === '(') {
             stack.push('(');
-            positions.push(i + 1); 
+            positions.push(i + 1);
         }
         else if (expression[i] === ')') {
             if (stack.length === 0) {
@@ -96,18 +137,14 @@ function checkBrackets(expression) {
             positions.pop();
         }
     }
-    
+
     if (stack.length > 0 && isValid) {
         message = `Unclosed bracket(s) found at position(s): ${positions.join(', ')}`;
         isValid = false;
     }
-    
-    return {
-        isValid,
-        message: isValid ? "" : message
-    };
-}
+    return isValid ? "" : message
 
+}
 
 function updateDisplay(value) {
     if (/(sin|cos|tan|ln|log|\^|√)/.test(value)) value += "(";
@@ -122,73 +159,12 @@ function updateDisplay(value) {
 function updateBracketValidation() {
     const messageDiv = document.getElementById('validation-message');
     const result = checkBrackets(input.value);
-    
-    messageDiv.textContent = result.message;
-    messageDiv.className = 'validation-message ' + (result.isValid ? 'success' : 'error');
+    messageDiv.textContent = result;
 }
 
 function clearDisplay() {
     input.value = '';
     document.getElementById('validation-message').textContent = '';
-}
-
-const nthRoot = (num, root) => num ** (1 / root);
-
-function convertFunctions(expression) {
-    const patterns = {
-        'sin\\([^()]*\\)': Math.sin,
-        'cos\\([^()]*\\)': Math.cos,
-        'tan\\([^()]*\\)': Math.tan,
-        'log\\([^()]*\\)': Math.log,
-        '\\(\\((\\d+)\\)√\\([^()]*\\)\\)': (match) => {
-            console.log(match)
-            const root = match.match(/\d+/)[0];
-            const num = match.match('√\\(([^()]*)\\)\\)')[1]
-            return nthRoot(calculateBODMAS(num), root);
-        },
-    };
-
-    function toRadians(angle) {
-        return angle * (Math.PI / 180);
-    }
-
-    function getValue(str) {
-        return str.substring(
-            str.indexOf('(') + 1,
-            str.lastIndexOf(')')
-        );
-    }
-
-    function processNestedFunctions(expr) {
-        let prevExpr;
-        do {
-            prevExpr = expr;
-            for (const [pattern, trigFunc] of Object.entries(patterns)) {
-                expr = expr.replace(new RegExp(pattern, 'g'), (matchingTrig) => {
-                    console.log(matchingTrig)
-                    if (matchingTrig.includes('√')) {
-                        return trigFunc(matchingTrig);
-                    }
-                    const value = getValue(matchingTrig)
-                    const processedValue = processNestedFunctions(value);
-
-                    if (matchingTrig.includes("sin") || matchingTrig.includes("cos") || matchingTrig.includes("tan")) {
-                        return Number(trigFunc(toRadians(Number(processedValue))));
-                    }
-                    return Number(trigFunc(Number(processedValue)));
-                });
-            }
-        } while (prevExpr !== expr);
-
-        return calculateBODMAS(expr);
-    }
-
-    return processNestedFunctions(expression);
-}
-
-function calculateAnswer(equation) {
-    equation = convertFunctions(equation)
-    return roundResult(calculateBODMAS(equation))
 }
 
 function displayAnswer() {
@@ -210,14 +186,68 @@ function displayAnswer() {
         }
     }
 }
-function roundResult(number) {
-    return Number(parseFloat(number).toFixed(10));
+
+function calculateAnswer(equation) {
+    const roundResult = (number) => Number(parseFloat(number).toFixed(10));
+    equation = evaluateFunctions(equation)
+    const answer = applyPEMDAS(equation)
+    return /\.\d{10,}$/.test(answer) ? roundResult(answer) : answer
 }
 
-function calculateBODMAS(expression) {
-    console.log(expression)
+function evaluateFunctions(expression) {
+    const nthRoot = (num, root) => num ** (1 / root);
+    const toRadians = (angle) => angle * (Math.PI / 180);
+    const getValueBetweenBrackets = (str) => str.substring(
+        str.indexOf('(') + 1,
+        str.lastIndexOf(')')
+    );
+
+    const getBaseLog = (match) => {
+        const [x, y] = match.split(",")
+        return Math.log(y) / Math.log(x);
+    }
+
+    const patterns = {
+        'sin\\([^()]*\\)': Math.sin,
+        'cos\\([^()]*\\)': Math.cos,
+        'tan\\([^()]*\\)': Math.tan,
+        'log\\([^()]*\\)': (match) => getBaseLog(match),
+        '\\(\\((\\d+)\\)√\\([^()]*\\)\\)': (match) => {
+            const root = match.match(/\d+/)[0];
+            const num = match.match('√\\(([^()]*)\\)\\)')[1]
+            return nthRoot(applyPEMDAS(num), root);
+        },
+    };
+
+    function processNestedFunctions(expr) {
+        let prevExpr;
+        do {
+            prevExpr = expr;
+            for (const [pattern, matchingFunction] of Object.entries(patterns)) {
+                expr = expr.replace(new RegExp(pattern, 'g'), (matchingTrig) => {
+                    if (matchingTrig.includes('√')) return matchingFunction(matchingTrig);
+
+                    const value = getValueBetweenBrackets(matchingTrig)
+
+                    if (matchingTrig.includes('log')) return matchingFunction(value);
+
+                    const processedValue = processNestedFunctions(value);
+
+                    if (matchingTrig.includes("sin") || matchingTrig.includes("cos") || matchingTrig.includes("tan"))
+                        return Number(matchingFunction(toRadians(Number(processedValue))));
+                });
+            }
+        } while (prevExpr !== expr);
+
+        return applyPEMDAS(expr);
+    }
+
+    return processNestedFunctions(expression);
+}
+
+function applyPEMDAS(expression) {
     if (!expression.includes('(')) {
-  
+
         return evaluateSimpleExpression(expression);
     }
 
@@ -256,18 +286,18 @@ function calculateBODMAS(expression) {
 
         const beforeBase = beforeBracket.substring(0, i + 1);
         const base = parseFloat(baseStr);
-        const exponent = calculateBODMAS(insideBracket);
+        const exponent = applyPEMDAS(insideBracket);
 
 
         const result = Math.pow(base, exponent);
         const newExpression = beforeBase + result + afterBracket;
-        return calculateBODMAS(newExpression);
+        return applyPEMDAS(newExpression);
     }
 
-    const evaluatedInside = calculateBODMAS(insideBracket);
+    const evaluatedInside = applyPEMDAS(insideBracket);
 
     const newExpression = beforeBracket + evaluatedInside + afterBracket;
-    return calculateBODMAS(newExpression);
+    return applyPEMDAS(newExpression);
 }
 
 function evaluateSimpleExpression(expr) {

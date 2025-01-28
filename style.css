@@ -68,7 +68,6 @@ button:hover {
     opacity: 0.8;
 }
 
-/* Add these styles to your existing CSS */
 .modal-container {
     position: fixed;
     top: 0;
@@ -112,14 +111,8 @@ button:hover {
 .modal-inputs {
     display: flex;
     flex-direction: column;
-    gap: 15px;
-    margin: 20px 0;
-}
-
-.input-group {
-    display: flex;
-    flex-direction: column;
     gap: 5px;
+    margin: 20px 0;
 }
 
 .input-group input {
@@ -139,7 +132,7 @@ button:hover {
 .modal-buttons button {
     height: 35px;
 }
-/* Add/modify these styles */
+
 .calculator-container {
     position: relative;
     display: flex;
@@ -149,19 +142,12 @@ button:hover {
 
 .validation-message {
     position: absolute;
-    top: 100%; /* Position below the calculator */
+    top: 100%; 
     margin-top: 10px;
     min-height: 20px;
     text-align: center;
     font-family: Arial, sans-serif;
     width: 100%;
-}
-
-.validation-message.error {
     color: #f44336;
-}
-
-.validation-message.success {
-    color: #4CAF50;
 }
 
