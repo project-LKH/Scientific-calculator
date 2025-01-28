@@ -188,7 +188,7 @@ function convertFunctions(expression) {
 
 function calculateAnswer(equation) {
     equation = convertFunctions(equation)
-    return calculateBODMAS(equation)
+    return roundResult(calculateBODMAS(equation))
 }
 
 function displayAnswer() {
@@ -213,10 +213,12 @@ function displayAnswer() {
 function roundResult(number) {
     return Number(parseFloat(number).toFixed(10));
 }
+
 function calculateBODMAS(expression) {
+    console.log(expression)
     if (!expression.includes('(')) {
-        console.log
-        return roundResult(evaluateSimpleExpression(expression));
+  
+        return evaluateSimpleExpression(expression);
     }
 
     let openingBracket = -1;
