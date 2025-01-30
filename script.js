@@ -33,7 +33,7 @@ function createRootModal() {
             </div>
             <div class="modal-buttons">
                 <button class="operator" onclick="displayRoot()">Update</button>
-                <button class="clear" onclick="closeModal()">Cancel</button>
+                <button class="clear" onclick="closeModal('rootModal')">Cancel</button>
             </div>
         </div>
     `;
@@ -63,7 +63,7 @@ function createLogModal() {
             </div>
             <div class="modal-buttons">
                 <button class="operator" onclick="displayLog()">Update</button>
-                <button class="clear" onclick="closeModal()">Cancel</button>
+                <button class="clear" onclick="closeModal('logModal')">Cancel</button>
             </div>
         </div>
     `;
@@ -77,7 +77,7 @@ function createLogModal() {
 }
 
 function closeModal(modalID) {
-    const modal = document.getElementById(modalID) ;
+    const modal = document.getElementById(modalID);
     if (modal) {
         modal.remove();
     }
@@ -100,7 +100,7 @@ function displayLog() {
     const base = document.getElementById('baseValue').value;
     const value = document.getElementById('value').value;
 
-    if (!base||!value) {
+    if (!base || !value) {
         alert('Please enter a base and value');
         return;
     }
@@ -116,29 +116,30 @@ function backspace() {
 }
 
 function checkBrackets(expression) {
-    const stack = [];
+    
     const positions = [];
+    let openBracketCount = 0
     let message = "";
     let isValid = true;
 
 
     for (let i = 0; i < expression.length; i++) {
         if (expression[i] === '(') {
-            stack.push('(');
+            openBracketCount++;
             positions.push(i + 1);
         }
         else if (expression[i] === ')') {
-            if (stack.length === 0) {
+            if (openBracketCount === 0) {
                 message = `Extra closing bracket found at position ${i + 1}`;
                 isValid = false;
                 break;
             }
-            stack.pop();
+            openBracketCount--
             positions.pop();
         }
     }
 
-    if (stack.length > 0 && isValid) {
+    if (openBracketCount > 0 && isValid) {
         message = `Unclosed bracket(s) found at position(s): ${positions.join(', ')}`;
         isValid = false;
     }
@@ -172,8 +173,15 @@ function displayAnswer() {
     clearDisplay()
     try {
         if (/[\+]{2,}|[\-]{3,}|[\/]{2,}|[\*]{2,}|[\^]{2,}/.test(equation)) {
-            throw new Error("Invalid operator repetition detected. Operators cannot be repeated (except -- for negative numbers).");
+            throw new Error("Invalid input: operator repetition detected. Operators cannot be repeated (except -- for negative numbers).");
         }
+        if (/\d+(sin|cos|tan|log)/.test(equation)) {
+            throw new Error('Invalid input: Implicit multiplication with functions is not allowed');
+        }
+        if (/\d+\(|\)[a-z\d]/.test(equation)) {
+            throw new Error('Invalid input: Missing operators between terms');
+        }
+
         updateDisplay(calculateAnswer(equation))
     } catch (err) {
         if (err.message.includes("call stack" || "cannot")) {
@@ -189,33 +197,36 @@ function displayAnswer() {
 
 function calculateAnswer(equation) {
     const roundResult = (number) => Number(parseFloat(number).toFixed(10));
-    equation = evaluateFunctions(equation)
-    const answer = applyPEMDAS(equation)
+    const answer = applyPEMDAS(evaluateFunctions(equation))
     return /\.\d{10,}$/.test(answer) ? roundResult(answer) : answer
 }
 
-function evaluateFunctions(expression) {
-    const nthRoot = (num, root) => num ** (1 / root);
-    const toRadians = (angle) => angle * (Math.PI / 180);
-    const getValueBetweenBrackets = (str) => str.substring(
-        str.indexOf('(') + 1,
-        str.lastIndexOf(')')
-    );
+const mathUtils = {
+    toRadians: angle => angle * (Math.PI / 180),
 
-    const getBaseLog = (match) => {
-        const [x, y] = match.split(",")
+    getValueBetweenBrackets: str => {
+        const start = str.indexOf('(') + 1;
+        const end = str.lastIndexOf(')');
+        return str.substring(start, end);
+    },
+
+    getBaseLog: match => {
+        const [x, y] = match.split(",");
         return Math.log(y) / Math.log(x);
-    }
+    },
+    nthRoot: (num, root) => num ** (1 / root)
+};
 
+function evaluateFunctions(expression) {
     const patterns = {
         'sin\\([^()]*\\)': Math.sin,
         'cos\\([^()]*\\)': Math.cos,
         'tan\\([^()]*\\)': Math.tan,
-        'log\\([^()]*\\)': (match) => getBaseLog(match),
+        'log\\([^()]*\\)': (match) => mathUtils.getBaseLog(match),
         '\\(\\((\\d+)\\)√\\([^()]*\\)\\)': (match) => {
             const root = match.match(/\d+/)[0];
             const num = match.match('√\\(([^()]*)\\)\\)')[1]
-            return nthRoot(applyPEMDAS(num), root);
+            return mathUtils.nthRoot(applyPEMDAS(num), root);
         },
     };
 
@@ -227,14 +238,14 @@ function evaluateFunctions(expression) {
                 expr = expr.replace(new RegExp(pattern, 'g'), (matchingTrig) => {
                     if (matchingTrig.includes('√')) return matchingFunction(matchingTrig);
 
-                    const value = getValueBetweenBrackets(matchingTrig)
+                    const value = mathUtils.getValueBetweenBrackets(matchingTrig)
 
                     if (matchingTrig.includes('log')) return matchingFunction(value);
 
                     const processedValue = processNestedFunctions(value);
 
                     if (matchingTrig.includes("sin") || matchingTrig.includes("cos") || matchingTrig.includes("tan"))
-                        return Number(matchingFunction(toRadians(Number(processedValue))));
+                        return Number(matchingFunction(mathUtils.toRadians(Number(processedValue))));
                 });
             }
         } while (prevExpr !== expr);
