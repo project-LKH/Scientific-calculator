@@ -144,9 +144,7 @@ function backspace() {
     updateBracketValidation()
 }
 
-
 function checkBrackets(expression) {
-
     const positions = [];
     let openBracketCount = 0
     let message = "";
