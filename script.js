@@ -119,6 +119,7 @@ function backspace() {
         'cos(',
         'tan(',
         'log(',
+        '^(',
         /\(\(\d+\)√\($/,
     ];
 
