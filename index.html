@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A scientific calculator web application">
+    <meta name="keywords" content="calculator, scientific, mathematics">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <meta name="author" content="Liam Henry">
+    <title>Scientific Calculator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="calculator-container">
+        <div class="calculator">
+            <input type="text" id="display" readonly>
+            <div class="buttons">
+                <button class="operator" data-value="sin">sin</button>
+                <button class="operator" data-value="cos">cos</button>
+                <button class="operator" data-value="tan">tan</button>
+                <button class="operator" data-value="log">log</button>
+                <button class="clear" data-value="del" onclick="backspace()">del</button>
+                <button class="operator" data-value="√">√</button>
+                <button class="operator" data-value="^">^</button>
+                <button class="operator" data-value="(">(</button>
+                <button class="operator" data-value=")">)</button>
+                <button class="clear" data-value="C" onclick="clearDisplay()">C</button>
+                <button class="number" data-value="1">1</button>
+                <button class="number" data-value="2">2</button>
+                <button class="number" data-value="3">3</button>
+                <button class="number" data-value="4">4</button>
+                <button class="operator" data-value="/">÷</button>
+                <button class="number" data-value="5">5</button>
+                <button class="number" data-value="6">6</button>
+                <button class="number" data-value="7">7</button>
+                <button class="number" data-value="8">8</button>
+                <button class="operator" data-value="*">×</button>
+                <button class="number" data-value="9">9</button>
+                <button class="number" data-value="0">0</button>
+                <button class="operator" data-value="+">+</button>
+                <button class="operator" data-value="-">-</button>
+                <button class="number" data-value=".">.</button>
+                <button class="equals" data-value="=" onclick="displayAnswer()">=</button>
+            </div>
+        </div>
+        <div id="validation-message" class="validation-message"></div>
+    </div>
+    <div class="modal-container"></div>
+    <script src="src/script.js"></script>
+</body>
+
+</html>
