@@ -111,12 +111,42 @@ function displayLog() {
 }
 
 function backspace() {
-    input.value = input.value.length ? input.value.slice(0, -1) : '';
-    updateBracketValidation();
+
+    if (!input.value) return '';
+
+    const patterns = [
+        'sin(',
+        'cos(',
+        'tan(',
+        'log(',
+        /\(\(\d+\)√\($/,
+    ];
+
+    for (const pattern of patterns) {
+        if (typeof pattern === 'string') {
+            if (input.value.endsWith(pattern)) {
+                input.value = input.value.slice(0, -pattern.length);
+                updateBracketValidation()
+                return
+            }
+        } else if (pattern instanceof RegExp) {
+            const match = input.value.match(pattern);
+            if (match) {
+                input.value = input.value.slice(0, -match[0].length);
+                updateBracketValidation()
+                return
+            }
+        }
+    }
+
+
+    input.value = input.value.slice(0, -1);
+    updateBracketValidation()
 }
 
+
 function checkBrackets(expression) {
-    
+
     const positions = [];
     let openBracketCount = 0
     let message = "";
