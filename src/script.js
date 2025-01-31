@@ -111,7 +111,6 @@ function displayLog() {
 }
 
 function backspace() {
-
     if (!input.value) return '';
 
     const patterns = [
@@ -151,7 +150,6 @@ function checkBrackets(expression) {
     let message = "";
     let isValid = true;
 
-
     for (let i = 0; i < expression.length; i++) {
         if (expression[i] === '(') {
             openBracketCount++;
@@ -172,8 +170,8 @@ function checkBrackets(expression) {
         message = `Unclosed bracket(s) found at position(s): ${positions.join(', ')}`;
         isValid = false;
     }
-    return isValid ? "" : message
 
+    return isValid ? "" : message
 }
 
 function updateDisplay(value) {
@@ -197,30 +195,30 @@ function clearDisplay() {
     document.getElementById('validation-message').textContent = '';
 }
 
-function displayAnswer() {
-    const equation = input.value
-    clearDisplay()
-    try {
-        if (/[\+]{2,}|[\-]{3,}|[\/]{2,}|[\*]{2,}|[\^]{2,}/.test(equation)) {
-            throw new Error("Invalid input: operator repetition detected. Operators cannot be repeated (except -- for negative numbers).");
-        }
-        if (/\d+(sin|cos|tan|log)/.test(equation)) {
-            throw new Error('Invalid input: Implicit multiplication with functions is not allowed');
-        }
-        if (/\d+\(|\)[a-z\d]/.test(equation)) {
-            throw new Error('Invalid input: Missing operators between terms');
-        }
+function validateEquation(equation) {
+    if (/[\+]{2,}|[\-]{3,}|[\/]{2,}|[\*]{2,}|[\^]{2,}/.test(equation)) {
+        throw new Error("Invalid input: operator repetition detected. Operators cannot be repeated (except -- for negative numbers).");
+    }
+    if (/\d+(sin|cos|tan|log)/.test(equation)) {
+        throw new Error('Invalid input: Implicit multiplication with functions is not allowed');
+    }
+    if (/\d+\(|\)[a-z\d]/.test(equation)) {
+        throw new Error('Invalid input: Missing operators between terms');
+    }
+    if (/^[\/+*]/.test(equation)) {
+        throw new Error('Invalid input: equation cannot start with /, + or *');
+    }
+}
 
+function displayAnswer() {
+    try {
+        const equation = input.value
+        clearDisplay()
+        validateEquation(equation)
         updateDisplay(calculateAnswer(equation))
     } catch (err) {
-        if (err.message.includes("call stack" || "cannot")) {
-            clearDisplay()
-            window.alert("Invalid input")
-        }
-        else {
-            clearDisplay()
-            window.alert(err.message)
-        }
+        clearDisplay()
+        alert(err.message.includes("call stack" || "cannot") ? "Invalid input" : err.message)
     }
 }
 
@@ -232,13 +230,11 @@ function calculateAnswer(equation) {
 
 const mathUtils = {
     toRadians: angle => angle * (Math.PI / 180),
-
     getValueBetweenBrackets: str => {
         const start = str.indexOf('(') + 1;
         const end = str.lastIndexOf(')');
         return str.substring(start, end);
     },
-
     getBaseLog: match => {
         const [x, y] = match.split(",");
         return Math.log(y) / Math.log(x);
